@@ -31,6 +31,24 @@ export const addComments = (comments) => ({
     payload: comments
 });
 
+export const postComment = (campsiteId, rating, author, text) => dispatch => {
+    const newComment = {
+        campsiteId,
+        rating,
+        author,
+        text
+    };
+    newComment.date = new Date().toISOString();
+    setTimeout(() => {
+        dispatch(addComment(newComment))
+    }, 2000)
+};
+
+export const addComment = comment => ({
+    type: ActionTypes.ADD_COMMENTS,
+    payload: comment
+});
+
 export const fetchCampsites = () => dispatch => {
 
     dispatch(campsitesLoading());
@@ -48,7 +66,8 @@ export const fetchCampsites = () => dispatch => {
             error => {
                 const errMess = new Error(error.message);
                 throw errMess;
-            })
+            }
+        )
         .then(response => response.json())
         .then(campsites => dispatch(addCampsites(campsites)))
         .catch(error => dispatch(campsitesFailed(error.message)));
@@ -153,25 +172,7 @@ export const addFavorite = campsiteId => ({
     payload: campsiteId
 })
 
-export const postComment = (campsiteId, rating, author, text) => dispatch => {
-    const newComment = {
-        campsiteId,
-        rating,
-        author,
-        text
-    };
-    newComment.date = new Date().toISOString();
-    setTimeout(() => {
-        dispatch(addComment(newComment))
-    }, 2000)
-}
-
-export const addComment = comment => ({
-    type: ActionTypes.ADD_COMMENTS,
-    payload: comment
-});
-
 export const deleteFavorite = campsiteId => ({
     type: ActionTypes.DELETE_FAVORITE,
-    payload: favorite
-});
+    payload: campsiteId
+}); 
