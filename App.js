@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import {ConfigureStore} from './redux/configureStore';
 import {YellowBox} from 'react-native';
 
+// to get rid or yellow warnings
 YellowBox.ignoreWarnings(['Warning: ...']);
 
 console.disableYellowBox = true;
