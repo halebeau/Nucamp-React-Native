@@ -3,7 +3,7 @@ import { Text, View, ScrollView, FlatList, Modal, Button, StyleSheet, Alert, Pan
 import { Card, Icon, Input, Rating } from 'react-native-elements';
 import {connect} from 'react-redux';
 import {baseUrl} from '../shared/baseUrl';
-import {postFavorite, postComment} from '../redux/ActionCreators';
+import {postFavorite, postComment, recognizeComment} from '../redux/ActionCreators';
 import * as Animatable from 'react-native-animatable';
 
 const mapStateToProps = state => {
@@ -16,7 +16,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = {
     postFavorite: campsiteId => (postFavorite(campsiteId)),
-    postComment: (campsiteId, rating, author, text) => (postComment())
+    postComment: (campsiteId, rating, author, text) => (postComment(campsiteId, rating, author, text))
 };
 
 function RenderCampsite(props) {
@@ -26,6 +26,7 @@ function RenderCampsite(props) {
     const view = React.createRef();
     
     const recognizeDrag = ({dx}) => (dx < -200) ? true : false;
+    const recognizeComment = ({dx}) => (dx > -200) ? true : false;
 
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: () => true,
@@ -34,8 +35,7 @@ function RenderCampsite(props) {
                 .then(endState => console.log(endState.finished ? 'finished' : 'canceled'));
         },
         onPanResponderEnd: (e, gestureState) => {
-            console.log('pan responder end', gestureState);
-            if (recognizeDrag(gestureState)) {
+            if(recognizeDrag(gestureState)) {
                 Alert.alert(
                     'Add Favorite',
                     'Add ' + campsite.name + ' to favorites?',
@@ -51,8 +51,10 @@ function RenderCampsite(props) {
                                 console.log('Already set as a favorite') : props.markFavorite()
                         }
                     ],
-                    { cancelable: false }
+                    {cancelable: false}
                 );
+            } else if(recognizeComment(gestureState)) {
+                props.onShowModal()
             }
             return true;
         }
