@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import { Text, View, StyleSheet, Picker, Switch, Button, Alert } from 'react-native';
 import DatePicker from 'react-native-datepicker';
 import * as Animatable from 'react-native-animatable';
+import * as Permissions from 'expo-permissions';
+import {Notifications} from 'expo';
 
-const view = React.createRef();
 
 class Reservation extends Component {
 
@@ -17,33 +18,33 @@ class Reservation extends Component {
         };
     }
 
-    showAlert1() {
+    handleReservation() {
+        console.log(JSON.stringify(this.state));
+        const message = `Number of Campers: ${this.state.campers}
+                        \nHike-In?: ${this.state.hikeIn}
+                        '\nDate: ${this.state.date}`;
         Alert.alert(
-            "Begin Search",
-            `
-            Number of Campers: ${this.state.campers}
-            
-            Hike-In?: ${this.state.hikeIn}
-            
-            Date: ${this.state.date}`,
+            'Begin Search?',
+            message,
             [
                 {
                     text: "Cancel",
-                    onPress: () => this.resetForm(),
+                    onPress: () => {
+                        console.log('Reservation Search Canceled');
+                        this.resetForm();
+                    },
                     style: 'cancel',
                 },
-                {text: 'OK', onPress: () => this.resetForm()},
+                {
+                    text: 'OK',
+                    onPress: () => {
+                        this.presentLocalNotification(this.state.date);
+                        this.resetForm();
+                    }
+                }
             ],
             {cancelable: false}
         );
-    }
-
-    static navigationOptions = {
-        title: 'Reserve Campsite'
-    }
-
-    handleReservation() {
-        console.log(JSON.stringify(this.state));
     }
 
     resetForm() {
@@ -54,14 +55,35 @@ class Reservation extends Component {
         });
     }
 
+    async obtainNotificationPermission() {
+        const permission = await Permissions.getAsync(Permissions.USER_FACING_NOTIFICATIONS);
+        if (permission.status !== 'granted') {
+            const permission = await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
+            if (permission.status !== 'granted') {
+                Alert.alert('Permission not granted to show notifications');
+            }
+            return permission;
+        }
+        return permission;
+    }
+
+    async presentLocalNotification(date) {
+        const permission = await this.obtainNotificationPermission();
+        if (permission.status === 'granted') {
+            Notifications.presentLocalNotificationAsync({
+                title: 'Your Campsite Reservation Search',
+                body: 'Search for ' + date + ' requested'
+            });
+        }
+    }
+
     render() {
         return (
             <Animatable.View
                 animation='zoomIn'
                 duration={2000}
-                delay={1000}
-                ref={view}>
-                <Animatable.View style={styles.formRow}>
+                delay={1000}>
+                <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Number of Campers</Text>
                     <Picker
                         style={styles.formItem}
@@ -74,7 +96,7 @@ class Reservation extends Component {
                         <Picker.Item label='5' value='5' />
                         <Picker.Item label='6' value='6' />
                     </Picker>
-            </Animatable.View>
+            </View>
                 <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Hike-In?</Text>
                     <Switch
@@ -111,7 +133,7 @@ class Reservation extends Component {
                 </View>
                 <View style={styles.formRow}>
                     <Button
-                        onPress={() => this.showAlert1()}
+                        onPress={() => this.Alert.alert()}
                         title='Search'
                         color='#5637DD'
                         accessibilityLabel='Tap me to search for available campsites to reserve'
