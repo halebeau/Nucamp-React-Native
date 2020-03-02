@@ -5,7 +5,10 @@ import * as SecureStore from 'expo-secure-store';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
 import { createBottomTabNavigator } from 'react-navigation';
-import { baseUrl } from '../shared/baseUrl';
+import {baseUrl} from '../shared/baseUrl';
+import * as ImageManipulator from 'expo-image-manipulator';
+// import CameraRoll from '@react-native-community/cameraroll';
+
 
 class LoginTab extends Component {
 
@@ -147,17 +150,42 @@ class RegisterTab extends Component {
         const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
         const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
 
-        if (cameraPermission.status === 'granted' && cameraRollPermission.status === 'granted') {
+        if(cameraPermission.status === 'granted' && cameraRollPermission.status === 'granted') {
             const capturedImage = await ImagePicker.launchCameraAsync({
                 allowsEditing: true,
                 aspect: [1, 1]
             });
-            if (!capturedImage.cancelled) {
+            if(!capturedImage.cancelled) {
                 console.log(capturedImage);
-                this.setState({imageUrl: capturedImage.uri});
+                this.processImage(capturedImage.uri);
             }
         }
     }
+
+    getImageFromGallery = async () => {
+        const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
+        const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+
+        if(cameraPermission.status === 'granted' && cameraRollPermission.status === 'granted') {
+            const capturedImage = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                aspect: [1, 1]
+            });
+            if(!capturedImage.cancelled) {
+                console.log(capturedImage);
+                this.processImage(capturedImage.uri);
+            }
+        }
+    }
+
+    processImage = async (imgUri) => {
+        const processedImage = await ImageManipulator.manipulateAsync(imgUri, [{resize: {width: 400, height: 400}}],
+            {format: ImageManipulator.SaveFormat.PNG})
+            console.log('test')
+            console.log(processedImage)
+            CameraRoll.saveToCameraRoll(processedImage.uri)
+            this.setState({imageUrl: proecessedImage.uri})
+        }
 
     handleRegister() {
         console.log(JSON.stringify(this.state));
@@ -180,6 +208,10 @@ class RegisterTab extends Component {
                             source={{uri: this.state.imageUrl}}
                             loadingIndicatorSource={require('./images/logo.png')}
                             style={styles.image}
+                        />
+                        <Button
+                            title='Gallery'
+                            onPress={this.getImageFromGallery}
                         />
                         <Button
                             title='Camera'
@@ -304,3 +336,4 @@ const styles = StyleSheet.create({
 });
 
 export default Login;
+
